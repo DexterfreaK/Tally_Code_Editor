@@ -16,7 +16,6 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
-import "react-toastify/dist/ReactToastify.css";
 
 import api from "@/axios";
 function AddTescases() {

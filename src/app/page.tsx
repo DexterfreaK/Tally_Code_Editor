@@ -66,28 +66,34 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useRouter } from "next/navigation";
 
 import * as React from "react";
 
 import { Calendar } from "@/components/ui/calendar";
 
-export function CalendarDemo() {
-  const [date, setDate] = React.useState<Date | undefined>(new Date());
 
-  return (
-    <Calendar
-      mode="single"
-      selected={date}
-      onSelect={setDate}
-      className="rounded-md border"
-    />
-  );
-}
+import { useEffect, useState } from "react";
+import api from "@/axios";
 
 import Graph from "@/components/ui/graph";
 import DarkModeButton from "@/components/ui/dark-mode-button";
 
 export default function Test() {
+  const router = useRouter();
+  const [prob, setProb] = useState();
+
+  useEffect(() => {
+    const fetchProb = async () => {
+      try {
+        const response = await api.get("/problem/all-problems"); // or use axiosInstance.get('/contests')
+        setProb(response.data);
+        console.log(response.data);
+      } catch (err: any) {}
+    };
+
+    fetchProb();
+  }, []);
   return (
     <main className="p-10">
       <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
@@ -98,15 +104,11 @@ export default function Test() {
           <Card x-chunk="dashboard-05-chunk-1">
             <CardHeader className="pb-2">
               <CardDescription>Solve Daily Problem</CardDescription>
-              <CardTitle className="text-4xl">Three Sum</CardTitle>
+              <CardTitle className="text-4xl">Sum of Two Numbers</CardTitle>
             </CardHeader>
-            <CardContent>
-              Once upon a time, in a far-off land, there was a very lazy king
-              who spent all day lounging on his throne. One day, his advisors
-              came to him with a problem: the kingdom was running out of money.
-            </CardContent>
+            <CardContent>Given two integers, return their sum</CardContent>
             <CardFooter>
-              <Button>Solve program!</Button>
+              <Button onClick={()=>router.push(`/problem/2`)}>Solve program!</Button>
             </CardFooter>
           </Card>
           <Card x-chunk="dashboard-05-chunk-1">
@@ -150,109 +152,51 @@ export default function Test() {
               Compete with friends and foes alike on speed and program execution
             </CardContent>
             <CardFooter>
-              <Link href={"/playground"}>
+              <Link href={"/contest"}>
                 <Button>Enter Playground!</Button>
               </Link>
             </CardFooter>
           </Card>
         </div>
         <div className="grid grid-col-4">
-          <Tabs defaultValue="week">
-            <div className="flex items-center">
-              <TabsList>
-                <TabsTrigger value="week">Week</TabsTrigger>
-                <TabsTrigger value="month">Month</TabsTrigger>
-                <TabsTrigger value="year">Year</TabsTrigger>
-              </TabsList>
-              <div className="ml-auto flex items-center gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 gap-1 text-sm"
-                    >
-                      <ListFilter className="h-3.5 w-3.5" />
-                      <span className="sr-only sm:not-sr-only">Filter</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuCheckboxItem checked>
-                      Fulfilled
-                    </DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem>
-                      Declined
-                    </DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem>
-                      Refunded
-                    </DropdownMenuCheckboxItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 gap-1 text-sm"
-                >
-                  <File className="h-3.5 w-3.5" />
-                  <span className="sr-only sm:not-sr-only">Export</span>
-                </Button>
-              </div>
-            </div>
+          <Card x-chunk="dashboard-05-chunk-3">
+            <CardHeader className="px-7">
+              <CardTitle>All Problems</CardTitle>
+              <CardDescription>All problems available</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead className="hidden sm:table-cell">Name</TableHead>
+                    <TableHead className="hidden sm:table-cell">Link</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {prob?.map((p) => (
+                    <TableRow className="bg-accent">
+                      <TableCell>
+                        <div className="font-medium">{p.id}</div>
+                        <div className="hidden text-sm text-muted-foreground md:inline"></div>
+                      </TableCell>
+                      <TableCell className=""> {p.problem_name}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <Button
+                          onClick={() => {
+                            router.push(`/problem/${p.id}`);
+                          }}
+                        >
+                          Link
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
 
-            <TabsContent value="week">
-              <Card x-chunk="dashboard-05-chunk-3">
-                <CardHeader className="px-7">
-                  <CardTitle>Orders</CardTitle>
-                  <CardDescription>
-                    Recent orders from your store.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Customer</TableHead>
-                        <TableHead className="hidden sm:table-cell">
-                          Type
-                        </TableHead>
-                        <TableHead className="hidden sm:table-cell">
-                          Status
-                        </TableHead>
-                        <TableHead className="hidden md:table-cell">
-                          Date
-                        </TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow className="bg-accent">
-                        <TableCell>
-                          <div className="font-medium">Liam Johnson</div>
-                          <div className="hidden text-sm text-muted-foreground md:inline">
-                            liam@example.com
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          Sale
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          <Badge className="text-xs" variant="secondary">
-                            Fulfilled
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          2023-06-23
-                        </TableCell>
-                        <TableCell className="text-right">$250.00</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
           {/* <CalendarDemo /> */}
         </div>
       </div>

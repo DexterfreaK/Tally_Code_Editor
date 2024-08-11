@@ -42,8 +42,11 @@ import {
 } from "@/components/ui/table";
 import React, { useEffect, useState } from "react";
 import api from "@/axios";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Dashboard() {
+  const user_id = 1;
   const [contests, setContests] = useState([]);
   const [error, setError] = useState(null);
 
@@ -63,6 +66,28 @@ export default function Dashboard() {
 
   if (error) return <div>Error: {error}</div>;
   if (!contests.length) return <div>Loading...</div>;
+
+  const router = useRouter();
+  // const { toast } = useToast();
+
+  const handleReg = async (contest_id: number) => {
+    try {
+      const response = await api
+        .post(
+          "/contest/reg-user",
+          { contest_id, user_id },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        )
+        .then((response) => {
+          console.log("Success:", response.data);
+          router.push(`/contest/${contest_id}`);
+        });
+    } catch (error) {}
+  };
 
   return (
     <div className="flex w-full flex-col">
@@ -90,9 +115,13 @@ export default function Dashboard() {
                         </div>
                         <div className="hidden text-sm text-muted-foreground md:inline">
                           <div>{contest?.contest_name}</div>
-                          <Link href={`/contest/${contest?.contest_id}`}>
-                            <Button className="mt-2">Go to Contest Page</Button>
-                          </Link>
+
+                          <Button
+                            className="mt-2"
+                            onClick={() => handleReg(contest?.contest_id)}
+                          >
+                            Register & Start Contest
+                          </Button>
                         </div>
                       </TableCell>
                       <TableCell className="hidden xl:table-column">

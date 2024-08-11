@@ -18,11 +18,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
+import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import MonacoEditor from "@monaco-editor/react";
 
 interface CodeEditorProps {
@@ -78,16 +85,26 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         });
     } catch (error) {
       toast({
-        variant:"destructive",
+        variant: "destructive",
         title: "Compilation Unsucessful",
       });
-      
+
       console.error("Error during the compilation process:", error);
     }
   };
 
   return (
     <div className="space-y-4">
+      <MonacoEditor
+        height="30vh"
+        language="python"
+        theme={theme}
+        value={code}
+        onChange={handleCodeChange}
+        options={{
+          automaticLayout: true,
+        }}
+      />
       <div className="flex items-center justify-between">
         <Select defaultValue="python" onValueChange={handleLanguageChange}>
           <SelectTrigger className="w-40">
@@ -101,16 +118,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         </Select>
         <Button onClick={handleSubmit}>Submit Code</Button>
       </div>
-      <MonacoEditor
-        height="55vh"
-        language="python"
-        theme={theme}
-        value={code}
-        onChange={handleCodeChange}
-        options={{
-          automaticLayout: true,
-        }}
-      />
     </div>
   );
 };
@@ -120,6 +127,20 @@ export default function Dashboard({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [outputData, setOutputData] = useState<any | null>(null);
+  const [sub, setSub] = useState<any | null>(null);
+
+  useEffect(() => {
+    const fetchSubmissions = async () => {
+      try {
+        const response = await api.get(
+          `/problem/getSubmissions?userId=${1}&problemId=${params.id}`
+        );
+        console.log(response.data);
+        setSub(response.data.submissions);
+      } catch (err: any) {}
+    };
+    fetchSubmissions();
+  }, []);
 
   useEffect(() => {
     const fetchProblem = async () => {
@@ -145,17 +166,59 @@ export default function Dashboard({ params }: { params: { id: string } }) {
         <ResizablePanel defaultSize={100}>
           <ResizablePanelGroup direction="vertical">
             <ResizablePanel
-              defaultSize={100}
+              defaultSize={120}
               className="relative flex h-full min-h-[50vh] flex-col rounded-xl bg-muted/50 p-4 lg:col-span-2"
             >
-              <CodeEditor
-                setOutput={setOutputData}
-                inputs={""}
-                pb_id={params.id}
-              />
+              <Tabs defaultValue="code">
+                <TabsList>
+                  <TabsTrigger value="code">Code</TabsTrigger>
+                  <TabsTrigger value="submission">Submissions</TabsTrigger>
+                </TabsList>
+                <TabsContent value="code">
+                  <CodeEditor
+                    setOutput={setOutputData}
+                    inputs={""}
+                    pb_id={params.id}
+                  />
+                </TabsContent>
+                <TabsContent value="submission">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>submission_id</TableHead>
+                        <TableHead className="hidden sm:table-cell">
+                          is_correct
+                        </TableHead>
+                        <TableHead className="hidden md:table-cell">
+                          created_at
+                        </TableHead>
+                        <TableHead className="hidden md:table-cell">
+                          Link
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sub.map((s: any) => (
+                        <TableRow className="bg-accent">
+                          <TableCell>
+                            <div className="font-medium"> {s.id}</div>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            {s.is_correct ? "True" : "False"}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {s.created_at}
+                          </TableCell>
+                          <TableCell className="text-right">Link</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TabsContent>
+              </Tabs>
             </ResizablePanel>
             <ResizableHandle />
-            <ResizablePanel defaultSize={200}>
+            <ResizablePanel defaultSize={80}>
               <fieldset className="grid gap-6 rounded-lg border p-4">
                 <legend className="-ml-1 px-1 text-sm font-medium">
                   Test Cases

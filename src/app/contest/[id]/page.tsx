@@ -29,13 +29,35 @@ export default function Dashboard({ params }: { params: { id: string } }) {
   const [problemsData, setProblems] = useState<any>([]);
   const [error, setError] = useState(null);
 
+  const [leaderboardData, setLeaderboardData] = useState([]);
+
+  useEffect(() => {
+
+    const socket = new WebSocket("ws://localhost:3001");
+
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      setLeaderboardData(data);
+      console.log(data);
+    };
+
+    // Clean up the WebSocket connection when the component unmounts
+    return () => {
+      socket.close();
+    };
+  }, []);
+
   useEffect(() => {
     const fetchContests = async () => {
       try {
-        const response = await api.get(`/contest/spec-contests/${params.id}`); // or use axiosInstance.get('/contests')
-        setContestData(response.data);
-        setProblems(response.data.problems);
-        console.log(response.data.problems);
+        const response = await api
+          .get(`/contest/spec-contests/${params.id}`)
+          .then((response) => {
+            setContestData(response.data);
+            setProblems(response.data.problems);
+            console.log(response.data.problems);
+          }); // or use axiosInstance.get('/contests')
       } catch (err: any) {
         setError(err.message);
       }
@@ -61,13 +83,13 @@ export default function Dashboard({ params }: { params: { id: string } }) {
               </div>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="account" className="">
+              <Tabs defaultValue="problems" className="">
                 <TabsList className="">
-                  <TabsTrigger value="account">Problems</TabsTrigger>
+                  <TabsTrigger value="problems">Problems</TabsTrigger>
                   <TabsTrigger value="submissions">My Submissions</TabsTrigger>
-                  <TabsTrigger value="password">Standings</TabsTrigger>
+                  <TabsTrigger value="standings">Standings</TabsTrigger>
                 </TabsList>
-                <TabsContent value="account">
+                <TabsContent value="problems">
                   <Card>
                     <CardHeader className="px-7">
                       <CardTitle>Problems List</CardTitle>
@@ -89,7 +111,9 @@ export default function Dashboard({ params }: { params: { id: string } }) {
                           {problemsData.map((problem) => (
                             <TableRow className="bg-accent">
                               <TableCell>
-                                <div className="font-medium">{problem.problem_name}</div>
+                                <div className="font-medium">
+                                  {problem.problem_name}
+                                </div>
                               </TableCell>
                               <TableCell className="hidden sm:table-cell">
                                 <Badge className="text-xs" variant="secondary">
@@ -97,7 +121,7 @@ export default function Dashboard({ params }: { params: { id: string } }) {
                                 </Badge>
                               </TableCell>
                               <TableCell className="hidden md:table-cell">
-                               <Button>Go to the problem</Button>
+                                <Button>Go to the problem</Button>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -106,28 +130,39 @@ export default function Dashboard({ params }: { params: { id: string } }) {
                     </CardContent>
                   </Card>
                 </TabsContent>
-                <TabsContent value="password">
+                <TabsContent value="standings">
                   <Card>
-                    <CardHeader>
-                      <CardTitle>Password</CardTitle>
-                      <CardDescription>
-                        Change your password here. After saving, you'll be
-                        logged out.
-                      </CardDescription>
+                    <CardHeader className="px-7">
+                      <CardTitle>Leaderboard</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="space-y-1">
-                        <Label htmlFor="current">Current password</Label>
-                        <Input id="current" type="password" />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="new">New password</Label>
-                        <Input id="new" type="password" />
-                      </div>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Score</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {leaderboardData.map((entry) => (
+                            <TableRow className="bg-accent">
+                              <TableCell>
+                                <div className="font-medium">{entry.name}</div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="font-medium">{entry.email}</div>
+                              </TableCell>
+                              <TableCell className="hidden sm:table-cell">
+                                <Badge className="text-xs" variant="secondary">
+                                  {entry.score}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </CardContent>
-                    <CardFooter>
-                      <Button>Save password</Button>
-                    </CardFooter>
                   </Card>
                 </TabsContent>
               </Tabs>
